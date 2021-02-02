@@ -196,9 +196,9 @@ public:
     
     vec ret(n_basis);
     ret(0) = 1;
-    double si = ret(1) = sin(z);
-    double co = ret(2) = cos(z);
-    if (order > 1) for (int i=1; i < order; i++) {
+    const double si = ret(1) = sin(z);
+    const double co = ret(2) = cos(z);
+    for (int i=1; i < order; i++) {
       ret(2*i+1) = si*ret(2*i) + co*ret(2*i-1); // sinus
       ret(2*i+2) = co*ret(2*i) - si*ret(2*i-1); // cosinus
     }
@@ -214,9 +214,9 @@ public:
       double z = (xx-left_end) * inv_length;
       
       ud(zz,0) = 1;
-      double si = ud(zz,1) = sin(z);
-      double co = ud(zz,2) = cos(z);
-      if (order > 1) for (int i=1; i < order; i++) {
+      const double si = ud(zz,1) = sin(z);
+      const double co = ud(zz,2) = cos(z);
+      for (int i=1; i < order; i++) {
         ud(zz,2*i+1) = si*ud(zz,2*i) + co*ud(zz,2*i-1);
         ud(zz,2*i+2) = co*ud(zz,2*i) - si*ud(zz,2*i-1);
       }
@@ -231,10 +231,10 @@ public:
     
     double z = (x-left_end) * inv_length;
     double ud = coefs(0);
-    double si = sin(z);
+    const double si = sin(z);
     double sii = si;
     ud += sii*coefs(1);
-    double co = cos(z);
+    const double co = cos(z);
     double coo = co;
     ud += coo*coefs(2);
     
@@ -254,23 +254,29 @@ public:
 
     vec ret(n_basis);
 
-    ret(0) = 0;
+    vec::iterator rit = ret.begin();
+    *rit = 0;
 
-    double co = ret(1) = cos(z);
+    const double co = cos(z);
     double coo = co;
-    ret(1) = inv_length * co;
-    double si = sin(z);
+    rit++;
+    *rit = inv_length * co;
+
+    const double si = sin(z);
     double sii = si;
-    ret(2) = - inv_length * si;
+    rit++;
+    *rit = -inv_length * si;
+
     for (int i=2; i <= order; i++) {
 
       double si0 = sii;
       sii = si*coo + co*sii;
       coo = coo*co - si*si0;
 
-
-      ret(2*i-1) = coo* inv_length * i;
-      ret(2*i) = -sii* inv_length * i;
+      rit++;
+      *rit = coo* inv_length * i;
+      rit++;
+      *rit = -sii* inv_length * i;
     }
 
     return ret;
@@ -290,10 +296,10 @@ public:
     double z = (x-left_end) * inv_length;
     double ud = 0;
 
-    double co = cos(z);
+    const double co = cos(z);
     double coo = co;
     ud += inv_length*coo*coefs(1);
-    double si = sin(z);
+    const double si = sin(z);
     double sii = si;
     ud -= inv_length*sii*coefs(2);
 
@@ -317,10 +323,11 @@ public:
       double z = (x(kk)-left_end) * inv_length;
       vec::const_iterator it = coefs.begin();
 
-      double co = cos(z);
+      const double co = cos(z);
       double coo = co;
       ud[kk] = inv_length*coo*(*(++it));
-      double si = sin(z);
+
+      const double si = sin(z);
       double sii = si;
       ud[kk] -= inv_length*sii*(*(++it));
 
@@ -338,8 +345,33 @@ public:
     return ud;
   };
 
-  
-  
+  arma::vec eval_d2_coefs(double x) {
+
+    double z = (x-left_end) * inv_length;
+    vec ret(n_basis);
+
+    ret(0) = 0;
+
+    const double si = sin(z);
+    double sii = si;
+    ret(1) = -inv_length * inv_length * si;
+
+    const double co = cos(z);
+    double coo = co;
+    ret(2) = -inv_length * inv_length * co;
+
+    for (int i=2; i<=order; i++) {
+      double si0 = sii;
+      sii = si*coo + co*sii;
+      coo = coo*co - si*si0;
+
+      ret(2*i-1) = -sii* inv_length * inv_length * i * i;
+      ret(2*i) = -coo* inv_length * inv_length * i * i;
+    }
+
+    return ret;
+  };
+
 };
 
 

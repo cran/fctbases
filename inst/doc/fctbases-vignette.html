@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Niels Olsen" />
+
+
+<title>fctbases vignette</title>
+
+<style type="text/css">
+a.anchor-section {margin-left: 10px; visibility: hidden; color: inherit;}
+a.anchor-section::before {content: '#';}
+.hasAnchor:hover a.anchor-section {visibility: visible;}
+</style>
+<script>// Anchor sections v1.0 written by Atsushi Yasumoto on Oct 3rd, 2020.
+document.addEventListener('DOMContentLoaded', function() {
+  // Do nothing if AnchorJS is used
+  if (typeof window.anchors === 'object' && anchors.hasOwnProperty('hasAnchorJSLink')) {
+    return;
+  }
+
+  const h = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+  // Do nothing if sections are already anchored
+  if (Array.from(h).some(x => x.classList.contains('hasAnchor'))) {
+    return null;
+  }
+
+  // Use section id when pandoc runs with --section-divs
+  const section_id = function(x) {
+    return ((x.classList.contains('section') || (x.tagName === 'SECTION'))
+            ? x.id : '');
+  };
+
+  // Add anchors
+  h.forEach(function(x) {
+    const id = x.id || section_id(x.parentElement);
+    if (id === '') {
+      return null;
+    }
+    let anchor = document.createElement('a');
+    anchor.href = '#' + id;
+    anchor.classList = ['anchor-section'];
+    x.classList.add('hasAnchor');
+    x.appendChild(anchor);
+  });
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">fctbases vignette</h1>
+<h4 class="author">Niels Olsen</h4>
+<h4 class="date">3/12/2020</h4>
+
+
+
+<p>Easy-to-use, fast implementations of functional bases for use in functional data analysis and elsewhere.</p>
+<p><code>fctbases</code> is a package for R, which implements some of the common linear functional bases such as B-splines and Fourier bases and stores these internally as C++ objects, accesssed from R as normal functions. In this way there is no need for initializing an R object every time a basis is used in R. One simply initializes the desired basis, which is returned as an R function that one calls with desired time/evaluation points and possibly coefficients. All calculations are implemented in C++. By moving some of computations to the time when objects are initialized, this speeds up some of the computations the even more. The package takes care of the internal bookkeeping of C++ objects and ensures the validity of these.</p>
+<p>First and second derivatives are also provided using the mathematical formulae for this. This is precise and uses no approximations.</p>
+<div id="initializing-a-functional-basis" class="section level2">
+<h2>Initializing a functional basis</h2>
+<p>Initialize a basis function by calling an appropiate initialization function, e.g.</p>
+<p><code>knots &lt;- 0:10 / 10</code></p>
+<p><code>f &lt;- make.bspline.basis(knots, order = 4)</code></p>
+<p>will return a bspline of order 4 (standard) with equidistant knots from 0 to 1.</p>
+<p><code>endpoints &lt;- c(0, 1)</code></p>
+<p><code>f &lt;-  make.fourier.basis(endpoints, 10)</code></p>
+<p>will return a Fourier basis with harmonics up to order 10 (that is, 21 degress of freedom) anchored in 0 and 1.</p>
+<p>Please see the help pages of the different functions for details.</p>
+</div>
+<div id="using-a-fctbasis-function" class="section level2">
+<h2>Using a fctbasis function</h2>
+<p>After having generated a fctbasis object, it will return a function like this:</p>
+<pre><code>function (t, x, deriv = FALSE) 
+{
+    if (missing(x)) {
+        if (deriv &gt; 1L) 
+            cpp_eval_D2(basis, t)
+        else if (deriv) 
+            cpp_eval_D(basis, t)
+        else cpp_eval_0(basis, t)
+    }
+    else {
+        if (deriv &gt; 1L) 
+            cpp_eval_D2_coefs(basis, t, x)
+        else if (deriv) 
+            cpp_eval_Dcoefs(basis, t, x)
+        else cpp_eval_coefs(basis, t, x)
+    }
+}
+&lt;bytecode: 0x...&gt;
+&lt;environment: 0x...&gt;
+attr(,&quot;class&quot;)
+[1] &quot;fctbasis&quot;</code></pre>
+<p>We see that this function (call it <code>f</code>) takes three arguments: <code>t</code> is a vector of evaluation points, <code>x</code> are optional coefficients to be multiplied, and <code>deriv</code> is whether the derivative (wrt. <code>t</code>) should be evaluated or not (defaults to false).</p>
+<p><code>f(t)</code>: Returns a matrix of the basis function evaluted at time points <code>t</code>.</p>
+<p><code>f(t, x)</code>: Returns a vector of the basis function evaluted at time points <code>t</code>, multiplied by coefficients <code>x</code>. Equal to <code>f(t) %*% x</code></p>
+<p><code>f(t, deriv = T)</code>: Returns first derivative, <span class="math inline">\(d/dt\)</span> <code>f(t)</code>.</p>
+<p><code>f(t, x, deriv = T)</code>: Returns first derivative, <span class="math inline">\(d/dt\)</span> <code>f(t) %*% x</code>.</p>
+<p><code>f(t, deriv = 2)</code>: Returns second derivative, <span class="math inline">\({d^2}/ {dt^2}\)</span> <code>f(t)</code>.</p>
+<p><code>f(t, x, deriv = 2)</code>: Returns second derivative, <span class="math inline">\(d^2 / dt^2\)</span> <code>f(t) %*% x</code>.</p>
+</div>
+<div id="speed" class="section level2">
+<h2>Speed</h2>
+<p>A small code example with speed comparison</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1"><span class="co">## Libraries</span></a>
+<a class="sourceLine" id="cb2-2" title="2"><span class="kw">library</span>(fctbases)</a>
+<a class="sourceLine" id="cb2-3" title="3"><span class="kw">library</span>(microbenchmark)</a>
+<a class="sourceLine" id="cb2-4" title="4"><span class="kw">library</span>(splines)</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1"><span class="co">## Order 4 B-spline, 13 basis functions (10 intervals + 3)</span></a>
+<a class="sourceLine" id="cb3-2" title="2">knots &lt;-<span class="st"> </span><span class="dv">0</span><span class="op">:</span><span class="dv">10</span> <span class="op">/</span><span class="st"> </span><span class="dv">10</span></a>
+<a class="sourceLine" id="cb3-3" title="3"></a>
+<a class="sourceLine" id="cb3-4" title="4"><span class="co">## the default way using splines::bs</span></a>
+<a class="sourceLine" id="cb3-5" title="5">bsb &lt;-<span class="st"> </span><span class="cf">function</span>(x) <span class="kw">bs</span>(x, <span class="dt">knots =</span> knots[<span class="dv">2</span><span class="op">:</span><span class="dv">10</span>], <span class="dt">Boundary.knots =</span> <span class="kw">c</span>(knots[<span class="dv">1</span>], knots[<span class="dv">11</span>]), <span class="dt">intercept =</span> T)</a>
+<a class="sourceLine" id="cb3-6" title="6"><span class="co">## fctbases;</span></a>
+<a class="sourceLine" id="cb3-7" title="7">bf &lt;-<span class="st"> </span><span class="kw">make.bspline.basis</span>(<span class="dt">knots =</span> knots)</a>
+<a class="sourceLine" id="cb3-8" title="8"></a>
+<a class="sourceLine" id="cb3-9" title="9"><span class="co">## some random coefficients and evaluation points</span></a>
+<a class="sourceLine" id="cb3-10" title="10"><span class="kw">set.seed</span>(<span class="dv">3457</span>)</a>
+<a class="sourceLine" id="cb3-11" title="11">coefs &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">13</span>)</a>
+<a class="sourceLine" id="cb3-12" title="12">y &lt;-<span class="st"> </span><span class="kw">sort</span>(<span class="kw">runif</span>(<span class="dv">100</span>))</a>
+<a class="sourceLine" id="cb3-13" title="13"></a>
+<a class="sourceLine" id="cb3-14" title="14"></a>
+<a class="sourceLine" id="cb3-15" title="15"><span class="kw">bf</span>(<span class="fl">0.3457</span>)</a></code></pre></div>
+<pre><code>##      [,1] [,2] [,3]       [,4]      [,5]      [,6]       [,7] [,8] [,9] [,10]
+## [1,]    0    0    0 0.02668383 0.5055397 0.4518692 0.01590733    0    0     0
+##      [,11] [,12] [,13]
+## [1,]     0     0     0</code></pre>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">bsb</span>(<span class="fl">0.3457</span>)</a></code></pre></div>
+<pre><code>##      1 2 3          4         5         6          7 8 9 10 11 12 13
+## [1,] 0 0 0 0.02668383 0.5055397 0.4518692 0.01590733 0 0  0  0  0  0
+## attr(,&quot;degree&quot;)
+## [1] 3
+## attr(,&quot;knots&quot;)
+## [1] 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9
+## attr(,&quot;Boundary.knots&quot;)
+## [1] 0 1
+## attr(,&quot;intercept&quot;)
+## [1] TRUE
+## attr(,&quot;class&quot;)
+## [1] &quot;bs&quot;     &quot;basis&quot;  &quot;matrix&quot;</code></pre>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">microbenchmark</span>(<span class="kw">bf</span>(y), <span class="kw">bsb</span>(y), <span class="dt">times =</span> <span class="dv">1000</span>)</a></code></pre></div>
+<pre><code>## Unit: microseconds
+##    expr   min     lq     mean median     uq    max neval
+##   bf(y)   6.1   8.15  10.5755    9.6  11.70   46.5  1000
+##  bsb(y) 107.2 113.35 134.2470  122.7 131.75 3599.4  1000</code></pre>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" title="1"><span class="kw">microbenchmark</span>(<span class="kw">bf</span>(y, coefs), <span class="kw">bsb</span>(y) <span class="op">%*%</span><span class="st"> </span>coefs, <span class="dt">times =</span> <span class="dv">1000</span>)</a></code></pre></div>
+<pre><code>## Unit: microseconds
+##              expr   min    lq     mean median    uq    max neval
+##      bf(y, coefs)   5.9   6.6   8.4749    8.3   9.0   77.3  1000
+##  bsb(y) %*% coefs 109.3 115.3 129.7725  119.2 127.4 2237.6  1000</code></pre>
+</div>
+<div id="installation" class="section level2">
+<h2>Installation</h2>
+<p>The package is available from CRAN: <code>install.package(&quot;fctbases&quot;)</code> or GitHub: “naolsen/fctbases”. The version on Github may be newer: download the source package or use devtools, e.g. <code>devtools::install_github(&quot;naolsen/fctbases&quot;)</code>. A C++ compiler is required to compile the source.</p>
+</div>
+<div id="issues" class="section level2">
+<h2>Issues</h2>
+<p>It is currently not possible to save <code>fctbases</code> objects as .RData objects (and likely will not be). Using a <code>fctbasis</code> object from a previous session will return an error.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
