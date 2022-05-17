@@ -11,8 +11,7 @@ using namespace Rcpp;
 
 
 inline vec make_tknots(const vec& spline_knots, int deg) {
-  
-  
+
   if (deg > 0) {
     int n_el = spline_knots.n_elem;
     vec kk(n_el + deg);
@@ -67,13 +66,10 @@ public:
     if (order < 1) throw std::invalid_argument("order must be strictly positive");
     else if (spline_knots.n_elem < 2) throw std::invalid_argument("At least two knots needed.");
     else {
-      
-      
       for (int i = 0; i < n_intervals; i++) if (knots(i) > knots(i+1))
         throw std::invalid_argument("Knots must be increasing");
     }
-    
-  }
+  };
 
   arma::vec eval_coefs(double x) {
 
@@ -87,12 +83,18 @@ public:
       ret(i) = 1;
 
       for (int j=1; j < order; j++) {
-        for (int k = i-j; k <= i; k++) {
+        for (int k = i-j; k < i; k++) {
 
           double dd = tknots(k+j) - tknots(k);
-          ret(k) =(x- tknots(k))/dd * ret(k) +
+
+          if (dd) ret(k) = (x- tknots(k))/dd * ret(k) +
             (tknots(k+j+1) - x)/( tknots(k+j+1) - tknots(k+1))* ret(k+1);
+          else {
+            ret(k) = (tknots(k+j+1) - x)/( tknots(k+j+1) - tknots(k+1))* ret(k+1);
+          }
         }
+        // afsluttende ..
+        ret(i) = (x - tknots(i)) / (tknots(i+j) - tknots(i))* ret(i);
       }
     }
     return ret;
@@ -101,22 +103,21 @@ public:
     // Evaluates B-spline y at specfified values x
     // If x is outside of the range of y, 0 is returned with a warning.
     arma::mat eval_coefs(const arma::vec& x) {
-      
-      mat ud = zeros<mat>(x.n_elem, n_basis);
-      
-      
+
+     mat ud = zeros<mat>(x.n_elem, n_basis);
+
       for (unsigned int zz = 0; zz < x.n_elem; zz ++) {
-      
+
       double xx = x[zz];
-      
+
       int i = getIndexOf(xx)-1;
       if (i < 0) {
         Rf_warning("Outside of range");
       }
       else {
-        
+
         ud(zz,i) = 1;
-        
+
           for (int j=1; j < order; j++) {
 
             for (int k = i-j; k < i; k++) {
@@ -133,8 +134,7 @@ public:
         }
       }
       return ud;
-      
-    }
+    };
     
     double eval_fct(double x, const arma::vec& coefs) {
       
@@ -257,7 +257,7 @@ public:
     // Evaluaterer d/dx B(x) ganget på koefficienter
     double eval_deriv(double x, const arma::vec& coefs) {
       
-      // if spline order is 1, then derivate is zero.
+      // if spline order is 1, then derivative is zero.
       if (deg > 0) {
         // Find interval
         int i = getIndexOf(x)-1;
@@ -566,14 +566,13 @@ public:
         ret(0) = (knots[i+1] - x)*ret(0)*inv_length3;
         break;
       }
-    }
-
     // compileren er næsvis!:
     double retur = ret[0]*coefs(i);
       retur += ret[1]*coefs(++i);
       retur += ret[2]*coefs(++i);
       retur += ret[3]*coefs(++i);
     return retur;
+    }
   };
   
   
@@ -581,12 +580,12 @@ public:
     
     if (n_basis != coefs.n_elem) stop("Coeffienct vector must have same length as number of bases");
     vec ret = zeros<vec>(4);
-    vec ud(x.n_elem);
-    
+    vec ud(x.n_elem, fill::none);
+
     
     for (unsigned int zz = 0; zz < x.n_elem; zz ++) {
         
-        double xx = x[zz];
+      const double xx = x[zz];
       
       int i = getIndexOf(xx)-1;
       
@@ -602,67 +601,67 @@ public:
         // -2,-1,0,1,2.
         int bcase3 = -(i < 2) - (i == 0) + (i == n_intervals-1) + (i > n_intervals - 3);
         
-        ret[1] = (xx-knots[i])*inv_length;
-        ret[0] = (knots[i+1] - xx)*inv_length;
+        ret[1] = (xx-knots[i]);
+        ret[0] = (knots[i+1] - xx);
         
         switch(bcase2) {
         case -1: 
-          ret(2) = (xx - knots[0])*ret(1)*inv_length2;
-          ret(1) = (xx - knots[0])*ret(0)*inv_length + (knots[2] - xx)*ret(1)*inv_length2;
-          ret(0) = (knots[1] - xx)*ret(0)*inv_length;
+          ret[2] = (xx - knots[0])*ret[1]*inv_length2;
+          ret[1] = (xx - knots[0])*ret[0]*inv_length + (knots[2] - xx)*ret[1]*inv_length2;
+          ret[0] = (knots[1] - xx)*ret[0]*inv_length;
           break;
         case 0:
-          ret(2) = (xx - knots[i])*ret(1)*inv_length2;
-          ret(1) = ((xx - knots[i-1])*ret(0)+(knots[i+2] - xx)*ret(1))*inv_length2;
-          ret(0) = (knots[i+1] - xx)*ret(0)*inv_length2;
+          ret[2] = (xx - knots[i])*ret[1]*inv_length2;
+          ret[1] = ((xx - knots[i-1])*ret[0]+(knots[i+2] - xx)*ret[1])*inv_length2;
+          ret[0] = (knots[i+1] - xx)*ret[0]*inv_length2;
           break;
         case 1: 
-          ret(2) = (xx - knots[i])*ret(1)*inv_length;
-          ret(1) = (xx - knots[i-1])*ret(0)*inv_length2 + 
-            (knots[i+1] - xx)*ret(1)*inv_length;
-          ret(0) = (knots[i+1] - xx)*ret(0)*inv_length2;
+          ret[2] = (xx - knots[i])*ret[1]*inv_length;
+          ret[1] = (xx - knots[i-1])*ret[0]*inv_length2 +
+            (knots[i+1] - xx)*ret[1]*inv_length;
+          ret[0] = (knots[i+1] - xx)*ret[0]*inv_length2;
           break;
         }
         switch(bcase3) {
         case -2: 
-          ret(3) = (xx - knots[0])*ret(2)*inv_length3;
-          ret(2) = (xx - knots[0])*ret(1)*inv_length2+(knots[3] - xx)*ret(2)*inv_length3;
-          ret(1) = (xx - knots[0])*ret(0)*inv_length + (knots[2] - xx)*ret(1)*inv_length2;
-          ret(0) = (knots[1] - xx)*ret(0)*inv_length;
+          ret[3] = (xx - knots[0])*ret[2]*inv_length3;
+          ret[2] = (xx - knots[0])*ret[1]*inv_length2+(knots[3] - xx)*ret[2]*inv_length3;
+          ret[1] = (xx - knots[0])*ret[0]*inv_length + (knots[2] - xx)*ret[1]*inv_length2;
+          ret[0] = (knots[1] - xx)*ret[0]*inv_length;
           break;
         case -1: 
-          ret(3) = (xx - knots[1])*ret(2)*inv_length3;
-          ret(2) = ((xx - knots[0])*ret(1)+(knots[4] - xx)*ret(2))*inv_length3;
-          ret(1) = (xx - knots[0])*ret(0)*inv_length2 + (knots[3] - xx)*ret(1)*inv_length3;
-          ret(0) = (knots[2] - xx)*ret(0)*inv_length2;
+          ret[3] = (xx - knots[1])*ret[2]*inv_length3;
+          ret[2] = ((xx - knots[0])*ret[1]+(knots[4] - xx)*ret[2])*inv_length3;
+          ret[1] = (xx - knots[0])*ret[0]*inv_length2 + (knots[3] - xx)*ret[1]*inv_length3;
+          ret[0] = (knots[2] - xx)*ret[0]*inv_length2;
           break;
         case 0:
-          ret(3) = (xx - knots[i])*ret(2)*inv_length3;
-          ret(2) = ((xx - knots[i-1])*ret(1)+(knots[i+3] - xx)*ret(2))*inv_length3;
-          ret(1) = ((xx - knots[i-2])*ret(0)+(knots[i+2] - xx)*ret(1))*inv_length3;
-          ret(0) = (knots[i+1] - xx)*ret(0)*inv_length3;
+          ret[3] = (xx - knots[i])*ret[2]*inv_length3;
+          ret[2] = ((xx - knots[i-1])*ret[1]+(knots[i+3] - xx)*ret[2])*inv_length3;
+          ret[1] = ((xx - knots[i-2])*ret[0]+(knots[i+2] - xx)*ret[1])*inv_length3;
+          ret[0] = (knots[i+1] - xx)*ret[0]*inv_length3;
           break;
         case 1: 
-          ret(3) = (xx - knots[i])*ret(2)*inv_length2;
-          ret(2) = (xx - knots[i-1])*ret(1)*inv_length3 +
-            (knots[i+2] - xx)*ret(2)*inv_length2;
-          ret(1) = ((xx - knots[i-2])*ret(0)+(knots[i+2] - xx)*ret(1))*inv_length3;
-          ret(0) = (knots[i+1] - xx)*ret(0)*inv_length3;
+          ret[3] = (xx - knots[i])*ret[2]*inv_length2;
+          ret[2] = (xx - knots[i-1])*ret[1]*inv_length3 +
+            (knots[i+2] - xx)*ret[2]*inv_length2;
+          ret[1] = ((xx - knots[i-2])*ret[0]+(knots[i+2] - xx)*ret[1])*inv_length3;
+          ret[0] = (knots[i+1] - xx)*ret[0]*inv_length3;
           break;
         case 2: 
-          ret(3) = (xx - knots[i])*ret(2)*inv_length;
-          ret(2) =  (xx - knots[i-1])*ret(1)*inv_length2 +
-            (knots[i+1] - xx)*ret(2)*inv_length;
-          ret(1) = (xx - knots[i-2])*ret(0)*inv_length3+(knots[i+1] - xx)*ret(1)*inv_length2;
-          ret(0) = (knots[i+1] - xx)*ret(0)*inv_length3;
+          ret[3] = (xx - knots[i])*ret[2]*inv_length;
+          ret[2] =  (xx - knots[i-1])*ret[1]*inv_length2 +
+            (knots[i+1] - xx)*ret[2]*inv_length;
+          ret[1] = (xx - knots[i-2])*ret[0]*inv_length3+(knots[i+1] - xx)*ret[1]*inv_length2;
+          ret[0] = (knots[i+1] - xx)*ret[0]*inv_length3;
           break;
         }
-      }
       double retur = ret[0]*coefs(i);
         retur +=  ret[1]*coefs(++i);
         retur += ret[2]*coefs(++i);
         retur += ret[3]*coefs(++i);
-      ud[zz] = retur;
+      ud[zz] = retur * inv_length;
+    }
   }
     return ud;
   };
@@ -831,14 +830,12 @@ public:
         ret(0) = -ret(0)*inv_length3;
         break;
       }
-      
-    }
-
     double retur = ret[0]*coefs(i);
       retur += ret[1]*coefs(++i);
       retur += ret[2]*coefs(++i);
       retur += ret[3]*coefs(++i);
     return 3 * retur;
+    }
     };
   
   arma::vec eval_d2_coefs(double x)  {
@@ -911,6 +908,85 @@ public:
     }
     return ret;
   }
+
+  double eval_d2(double x, const arma::vec& coefs) {
+
+    if (n_basis != coefs.n_elem) stop("Coeffienct vector must have same length as number of bases");
+
+    vec ret = zeros<vec>(4);
+    int i = getIndexOf(x)-1;
+
+    if (i < 0) {
+      Rf_warning("Outside of range");
+      return 0;
+    }
+    else {
+      // -1 hvis første interval, +1 hvis sidste interval, 0 ellers.
+      int bcase2 = -(i == 0) + (i == n_intervals-1);
+
+      // -2,-1,0,1,2.
+      int bcase3 = -(i < 2) - (i == 0) + (i == n_intervals-1) + (i > n_intervals - 3);
+
+      ret[1] = (x-knots[i])*inv_length;
+      ret[0] = (knots[i+1] - x)*inv_length;
+
+      switch(bcase2) {
+      case -1:
+        ret(2) = ret(1)*inv_length2;
+        ret(1) = ret(0)*inv_length - ret(1)*inv_length2;
+        ret(0) = -ret(0)*inv_length;
+        break;
+      case 0:
+        ret(2) = ret(1)*inv_length2;
+        ret(1) = (ret(0) - ret(1))*inv_length2;
+        ret(0) = -ret(0)*inv_length2;
+        break;
+      case 1:
+        ret(2) = ret(1)*inv_length;
+        ret(1) = ret(0)*inv_length2 - ret(1)*inv_length;
+        ret(0) = -ret(0)*inv_length2;
+        break;
+      }
+
+      switch(bcase3) {
+      case -2:
+        ret(3) = ret(2)*inv_length3; // Samme som inv_length?
+        ret(2) = (ret(1)*inv_length2 - ret(2)*inv_length3);
+        ret(1) = (ret(0)*inv_length - ret(1)*inv_length2);
+        ret(0) = -ret(0)*inv_length;
+        break;
+      case -1:
+        ret(3) = ret(2)*inv_length3;
+        ret(2) = (ret(1) - ret(2))*inv_length3;
+        ret(1) = (ret(0)*inv_length2 - ret(1)*inv_length3);
+        ret(0) = -ret(0)*inv_length2;
+        break;
+      case 0:
+        ret(3) = ret(2)*inv_length3;
+        ret(2) = (ret(1) - ret(2))*inv_length3;
+        ret(1) = (ret(0) - ret(1))*inv_length3;
+        ret(0) = -ret(0)*inv_length3;
+        break;
+      case 1:
+        ret(3) = ret(2)*inv_length2;
+        ret(2) = (ret(1)*inv_length3 - ret(2)*inv_length2);
+        ret(1) = (ret(0) - ret(1))*inv_length3;
+        ret(0) = -ret(0)*inv_length3;
+        break;
+      case 2:
+        ret(3) = ret(2)*inv_length;
+        ret(2) = (ret(1)*inv_length2 - ret(2)*inv_length);
+        ret(1) = (ret(0)*inv_length3 - ret(1)*inv_length2);
+        ret(0) = -ret(0)*inv_length3;
+        break;
+      }
+    double retur = ret[0]*coefs(i);
+      retur += ret[1]*coefs(++i);
+      retur += ret[2]*coefs(++i);
+      retur += ret[3]*coefs(++i);
+    return 6 * retur;
+        }
+    };
 };
 
 #endif

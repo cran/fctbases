@@ -31,14 +31,14 @@ public:
     // konstructor
 public:
   fourierBasis(double left, double right, int f_order): functionObject(2 * f_order + 1),
-  left_end(left), right_end(right), length(right- left), order(f_order),  inv_length(2*PI/length)  {
+  left_end(left), right_end(right), length(right- left), order(f_order),  inv_length(2*M_PI/length)  {
     if (f_order < 1) throw std::invalid_argument("Order must be strictly positive.");
   }
   
   arma::vec eval_coefs(double x) {
-    double z = (x-left_end) * inv_length;
+    const double z = (x-left_end) * inv_length;
     
-    vec ret(n_basis);
+    vec ret(n_basis, fill::none);
     ret(0) = 1;
     for (int i=1; i<=order; i++) {
       ret(2*i-1) = sin(z*i);
@@ -48,13 +48,13 @@ public:
   }
   
   arma::mat eval_coefs(const arma::vec& x) {
-    mat ud(x.n_elem , n_basis);
+    mat ud(x.n_elem , n_basis, fill::none);
     
     for (unsigned int kk = 0; kk < x.n_elem; kk++) {
       
-      double z = (x(kk)-left_end) * inv_length;
+      const double z = (x(kk)-left_end) * inv_length;
       
-      rowvec ret(n_basis);
+      rowvec ret(n_basis, fill::none);
       rowvec::row_iterator rit = ret.begin();
       (*rit) = 1;
       
@@ -73,7 +73,7 @@ public:
     
     if (n_basis != coefs.n_elem) throw std::invalid_argument("Coeffienct vector must have same length as number of bases");
     
-    double z = (x-left_end) * inv_length;
+    const double z = (x-left_end) * inv_length;
     double ud = coefs(0);
     
     for (int i=1; i<=order; i++) {
@@ -88,7 +88,7 @@ public:
   arma::vec eval_fct(const arma::vec& x, const arma::vec& coefs) {
     if (n_basis != coefs.n_elem) throw std::invalid_argument("Coeffienct vector must have same length as number of bases");
     
-    vec ud(x.n_elem);
+    vec ud(x.n_elem, fill::none);
     for (unsigned int kk = 0; kk < x.n_elem; kk++) {
       ud(kk) = eval_fct(x(kk), coefs);
     }
@@ -96,9 +96,9 @@ public:
   }
   
   arma::vec eval_deriv_coefs(double x) {
-    double z = (x-left_end) * inv_length;
+    const double z = (x-left_end) * inv_length;
     
-    vec ret(n_basis);
+    vec ret(n_basis, fill::none);
     
     ret(0) = 0;
     for (int i=1; i<=order; i++) {
@@ -109,10 +109,10 @@ public:
     return ret;
   }
   arma::mat eval_deriv_coefs(const arma::vec& x) {
-    mat ud(x.n_elem, n_basis);
+    mat ud(x.n_elem, n_basis, fill::none);
     
     for (unsigned int kk = 0; kk < x.n_elem; kk++) {
-      double z = (x(kk)-left_end) * inv_length;
+      const double z = (x(kk)-left_end) * inv_length;
       rowvec ret(n_basis);
       
       ret(0) = 0;
@@ -130,7 +130,7 @@ public:
     
     if (n_basis != coefs.n_elem) throw std::invalid_argument("Coeffienct vector must have same length as number of bases");
     
-    double z = (x-left_end) * inv_length;
+    const double z = (x-left_end) * inv_length;
     double ud = 0;
     
     for (int i=1; i<=order; i++) {
@@ -152,8 +152,8 @@ public:
 
    arma::vec eval_d2_coefs(double x) {
 
-    double z = (x-left_end) * inv_length;
-    vec ret(n_basis);
+    const double z = (x-left_end) * inv_length;
+    vec ret(n_basis, fill::none);
 
     ret(0) = 0;
     for (int i=1; i<=order; i++) {
@@ -192,13 +192,13 @@ public:
   
   
   arma::vec eval_coefs(double x) {
-    double z = (x-left_end) * inv_length;
+    const double z = (x-left_end) * inv_length;
     
-    vec ret(n_basis);
+    vec ret(n_basis, fill::none);
     ret(0) = 1;
-    const double si = ret(1) = sin(z);
-    const double co = ret(2) = cos(z);
-    for (int i=1; i < order; i++) {
+    double si = ret(1) = sin(z);
+    double co = ret(2) = cos(z);
+    if (order > 1) for (int i=1; i < order; i++) {
       ret(2*i+1) = si*ret(2*i) + co*ret(2*i-1); // sinus
       ret(2*i+2) = co*ret(2*i) - si*ret(2*i-1); // cosinus
     }
@@ -207,16 +207,16 @@ public:
   
   arma::mat eval_coefs(const arma::vec& x) {
     
-    mat ud(x.n_elem, n_basis);
+    mat ud(x.n_elem, n_basis, fill::none);
     
     for (unsigned int zz = 0; zz < x.n_elem; zz++) {
       double xx = x[zz];
-      double z = (xx-left_end) * inv_length;
+      const double z = (xx-left_end) * inv_length;
       
       ud(zz,0) = 1;
-      const double si = ud(zz,1) = sin(z);
-      const double co = ud(zz,2) = cos(z);
-      for (int i=1; i < order; i++) {
+      double si = ud(zz,1) = sin(z);
+      double co = ud(zz,2) = cos(z);
+      if (order > 1) for (int i=1; i < order; i++) {
         ud(zz,2*i+1) = si*ud(zz,2*i) + co*ud(zz,2*i-1);
         ud(zz,2*i+2) = co*ud(zz,2*i) - si*ud(zz,2*i-1);
       }
@@ -229,12 +229,12 @@ public:
     
     if (n_basis != coefs.n_elem) throw std::invalid_argument("Coeffienct vector must have same length as number of bases");
     
-    double z = (x-left_end) * inv_length;
+    const double z = (x-left_end) * inv_length;
     double ud = coefs(0);
-    const double si = sin(z);
+    double si = sin(z);
     double sii = si;
     ud += sii*coefs(1);
-    const double co = cos(z);
+    double co = cos(z);
     double coo = co;
     ud += coo*coefs(2);
     
@@ -250,40 +250,34 @@ public:
   };
 
     arma::vec eval_deriv_coefs(double x) {
-    double z = (x-left_end) * inv_length;
+    const double z = (x-left_end) * inv_length;
 
-    vec ret(n_basis);
+    vec ret(n_basis, fill::none);
 
-    vec::iterator rit = ret.begin();
-    *rit = 0;
+    ret(0) = 0;
 
-    const double co = cos(z);
+    double co = ret(1) = cos(z);
     double coo = co;
-    rit++;
-    *rit = inv_length * co;
-
-    const double si = sin(z);
+    ret(1) = inv_length * co;
+    double si = sin(z);
     double sii = si;
-    rit++;
-    *rit = -inv_length * si;
-
+    ret(2) = - inv_length * si;
     for (int i=2; i <= order; i++) {
 
       double si0 = sii;
       sii = si*coo + co*sii;
       coo = coo*co - si*si0;
 
-      rit++;
-      *rit = coo* inv_length * i;
-      rit++;
-      *rit = -sii* inv_length * i;
+
+      ret(2*i-1) = coo* inv_length * i;
+      ret(2*i) = -sii* inv_length * i;
     }
 
     return ret;
   };
 
   arma::mat eval_deriv_coefs(const arma::vec& x) {
-    mat ud(n_basis, x.n_elem);
+    mat ud(n_basis, x.n_elem, fill::none);
 
     for (unsigned int kk = 0; kk < x.n_elem; kk++) ud.col(kk) =  eval_deriv_coefs(x(kk));
     return ud.t();
@@ -293,13 +287,13 @@ public:
 
     if (n_basis != coefs.n_elem) throw std::invalid_argument("Coeffienct vector must have same length as number of bases");
 
-    double z = (x-left_end) * inv_length;
+    const double z = (x-left_end) * inv_length;
     double ud = 0;
 
-    const double co = cos(z);
+    double co = cos(z);
     double coo = co;
     ud += inv_length*coo*coefs(1);
-    const double si = sin(z);
+    double si = sin(z);
     double sii = si;
     ud -= inv_length*sii*coefs(2);
 
@@ -317,17 +311,16 @@ public:
   arma::vec eval_deriv(const arma::vec& x, const arma::vec& coefs) {
     if (n_basis != coefs.n_elem) throw std::invalid_argument("Coeffienct vector must have same length as number of bases");
 
-    vec ud(x.n_elem);
+    vec ud(x.n_elem, fill::none);
 
     for (unsigned int kk = 0; kk < x.n_elem; kk++) {
-      double z = (x(kk)-left_end) * inv_length;
+     const double z = (x(kk)-left_end) * inv_length;
       vec::const_iterator it = coefs.begin();
 
-      const double co = cos(z);
+      double co = cos(z);
       double coo = co;
       ud[kk] = inv_length*coo*(*(++it));
-
-      const double si = sin(z);
+      double si = sin(z);
       double sii = si;
       ud[kk] -= inv_length*sii*(*(++it));
 
@@ -345,33 +338,8 @@ public:
     return ud;
   };
 
-  arma::vec eval_d2_coefs(double x) {
-
-    double z = (x-left_end) * inv_length;
-    vec ret(n_basis);
-
-    ret(0) = 0;
-
-    const double si = sin(z);
-    double sii = si;
-    ret(1) = -inv_length * inv_length * si;
-
-    const double co = cos(z);
-    double coo = co;
-    ret(2) = -inv_length * inv_length * co;
-
-    for (int i=2; i<=order; i++) {
-      double si0 = sii;
-      sii = si*coo + co*sii;
-      coo = coo*co - si*si0;
-
-      ret(2*i-1) = -sii* inv_length * inv_length * i * i;
-      ret(2*i) = -coo* inv_length * inv_length * i * i;
-    }
-
-    return ret;
-  };
-
+  
+  
 };
 
 
